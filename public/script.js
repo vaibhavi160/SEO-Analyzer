@@ -102,11 +102,6 @@ function renderUI(data) {
       </ul>
     </div>
 
-    <div class="card actions">
-      <button onclick="downloadCSV()">📥 Download CSV</button>
-      <button onclick="downloadPDF()">📄 Download PDF</button>
-    </div>
-
     <canvas id="seoChart"></canvas>
   `;
 
