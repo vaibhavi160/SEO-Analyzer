@@ -1,36 +1,37 @@
 let chart;
+let sites=[];
 
 async function analyze(){
 
 const url=document.getElementById("urlInput").value;
 
-document.getElementById("loader").innerHTML="Analyzing...";
-
 const response=await fetch("/analyze",{
-
 method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({url})
-
 });
 
 const data=await response.json();
-
-document.getElementById("loader").innerHTML="";
 
 document.getElementById("result").classList.remove("hidden");
 
 showChart(data);
 
-showData(data);
+showFeatures(data);
+
+showKeywords(data);
+
+showSuggestions(data);
 
 setupPDF(data);
 
+sites.push(data);
+
+renderComparison();
+
 }
+
+/* CHART */
 
 function showChart(data){
 
@@ -53,47 +54,85 @@ data:[data.score,100-data.score]
 
 }
 
-function showData(data){
+/* FEATURE GRID */
 
-const seo=document.getElementById("seoData");
+function showFeatures(data){
 
-seo.innerHTML=`
+const grid=document.getElementById("featureGrid");
 
-<li><b>Title:</b> ${data.title}</li>
-<li><b>Meta Description:</b> ${data.metaDescription}</li>
-<li><b>H1 Count:</b> ${data.h1Count}</li>
-<li><b>H2 Count:</b> ${data.h2Count}</li>
-<li><b>Total Images:</b> ${data.totalImages}</li>
-<li><b>Images without ALT:</b> ${data.imagesWithoutAlt}</li>
-<li><b>Total Links:</b> ${data.links}</li>
-<li><b>HTML Size:</b> ${data.htmlSizeKB} KB</li>
-<li><b>HTTPS:</b> ${data.isHTTPS}</li>
-<li><b>Mobile Friendly:</b> ${data.hasViewport}</li>
-<li><b>Grade:</b> ${data.grade}</li>
+grid.innerHTML="";
+
+const features={
+
+"SEO Score":data.score,
+"H1 Tags":data.h1Count,
+"H2 Tags":data.h2Count,
+"Total Images":data.totalImages,
+"Images without ALT":data.imagesWithoutAlt,
+"Internal Links":data.internalLinks,
+"External Links":data.externalLinks,
+"Word Count":data.wordTotal,
+"Paragraphs":data.paragraphCount,
+"Lists":data.listCount,
+"Scripts":data.scriptCount,
+"CSS Files":data.cssFiles,
+"Forms":data.forms,
+"Tables":data.tables,
+"Videos":data.videos,
+"HTML Size KB":data.htmlSizeKB,
+"HTTPS":data.isHTTPS,
+"Viewport":data.hasViewport,
+"HTML Lang":data.htmlLang||"Missing"
+
+};
+
+Object.entries(features).forEach(([k,v])=>{
+
+grid.innerHTML+=`
+
+<div class="feature-card">
+
+<div class="feature-title">${k}</div>
+
+<div class="feature-value">${v}</div>
+
+</div>
 
 `;
-
-const keywords=document.getElementById("keywords");
-
-keywords.innerHTML="";
-
-data.keywords.forEach(k=>{
-
-keywords.innerHTML+=`<li>${k[0]} (${k[1]})</li>`;
-
-});
-
-const sug=document.getElementById("suggestions");
-
-sug.innerHTML="";
-
-data.suggestions.forEach(s=>{
-
-sug.innerHTML+=`<li>${s}</li>`;
 
 });
 
 }
+
+/* KEYWORDS */
+
+function showKeywords(data){
+
+const list=document.getElementById("keywords");
+
+list.innerHTML="";
+
+data.keywords.forEach(k=>{
+list.innerHTML+=`<li>${k[0]} (${k[1]})</li>`;
+});
+
+}
+
+/* SUGGESTIONS */
+
+function showSuggestions(data){
+
+const list=document.getElementById("suggestions");
+
+list.innerHTML="";
+
+data.suggestions.forEach(s=>{
+list.innerHTML+=`<li>${s}</li>`;
+});
+
+}
+
+/* PDF */
 
 function setupPDF(data){
 
@@ -105,19 +144,15 @@ const doc=new jsPDF();
 
 let y=20;
 
-doc.setFontSize(20);
+doc.text("SEO Report",20,y);
 
-doc.text("SEO Audit Report",20,y);
-
-y+=20;
-
-doc.setFontSize(12);
+y+=10;
 
 doc.text("Website: "+data.url,20,y);
 
 y+=10;
 
-doc.text("SEO Score: "+data.score,20,y);
+doc.text("Score: "+data.score,20,y);
 
 y+=10;
 
@@ -132,26 +167,6 @@ y+=10;
 doc.text("Meta Description: "+data.metaDescription,20,y);
 
 y+=10;
-
-doc.text("H1 Count: "+data.h1Count,20,y);
-
-y+=10;
-
-doc.text("H2 Count: "+data.h2Count,20,y);
-
-y+=10;
-
-doc.text("Images without ALT: "+data.imagesWithoutAlt,20,y);
-
-y+=10;
-
-doc.text("Total Links: "+data.links,20,y);
-
-y+=10;
-
-doc.text("HTML Size: "+data.htmlSizeKB+" KB",20,y);
-
-y+=20;
 
 doc.text("Suggestions:",20,y);
 
@@ -168,5 +183,32 @@ y+=8;
 doc.save("seo-report.pdf");
 
 }
+
+}
+
+/* COMPARISON */
+
+function renderComparison(){
+
+const table=document.getElementById("comparisonTable");
+
+table.innerHTML="";
+
+sites.forEach(site=>{
+
+table.innerHTML+=`
+
+<tr>
+<td>${site.url}</td>
+<td>${site.score}</td>
+<td>${site.h1Count}</td>
+<td>${site.totalImages}</td>
+<td>${site.wordTotal}</td>
+<td>${site.grade}</td>
+</tr>
+
+`;
+
+});
 
 }

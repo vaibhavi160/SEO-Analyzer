@@ -1,33 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>AI SEO Auditor</title>
 
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
 
 <body>
 
-<div class="container">
-
 <h1>AI SEO Auditor</h1>
 
-<div class="input-box">
-
-<input id="urlInput" placeholder="Enter Website URL">
+<input id="urlInput" placeholder="Enter website">
 
 <button onclick="analyze()">Analyze</button>
-
-</div>
-
-<div id="loader"></div>
 
 <div id="result" class="hidden">
 
@@ -35,21 +26,40 @@
 
 <canvas id="scoreChart"></canvas>
 
-<h3>Basic SEO Info</h3>
+<h2>SEO Feature Dashboard</h2>
 
-<ul id="seoData"></ul>
+<div id="featureGrid" class="feature-grid"></div>
 
-<h3>Top Keywords</h3>
+<h2>Top Keywords</h2>
 
 <ul id="keywords"></ul>
 
-<h3>Suggestions</h3>
+<h2>Suggestions</h2>
 
 <ul id="suggestions"></ul>
 
 <button id="downloadPDF">Download PDF Report</button>
 
-</div>
+<h2>Comparison Dashboard</h2>
+
+<table border="1">
+
+<thead>
+
+<tr>
+<th>Site</th>
+<th>Score</th>
+<th>H1</th>
+<th>Images</th>
+<th>Words</th>
+<th>Grade</th>
+</tr>
+
+</thead>
+
+<tbody id="comparisonTable"></tbody>
+
+</table>
 
 </div>
 
