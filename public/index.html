@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SEO Analyzer</title>
+<title>AI SEO Auditor</title>
 
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </head>
 
@@ -14,29 +17,39 @@
 
 <div class="container">
 
-<h1>SEO Analyzer Dashboard</h1>
+<h1>AI SEO Auditor</h1>
 
-<div class="top-bar">
+<div class="input-box">
 
-<button onclick="toggleDarkMode()">Dark Mode</button>
-
-<button onclick="downloadCSV()">Download CSV</button>
-
-<button onclick="downloadPDF()">Download PDF</button>
-
-</div>
-
-<div class="search-box">
-
-<input type="text" id="urlInput" placeholder="Enter website URL">
+<input id="urlInput" placeholder="Enter Website URL">
 
 <button onclick="analyze()">Analyze</button>
 
 </div>
 
-<div id="loading" class="hidden">Analyzing website...</div>
+<div id="loader"></div>
 
-<div id="result"></div>
+<div id="result" class="hidden">
+
+<h2>SEO Score</h2>
+
+<canvas id="scoreChart"></canvas>
+
+<h3>Basic SEO Info</h3>
+
+<ul id="seoData"></ul>
+
+<h3>Top Keywords</h3>
+
+<ul id="keywords"></ul>
+
+<h3>Suggestions</h3>
+
+<ul id="suggestions"></ul>
+
+<button id="downloadPDF">Download PDF Report</button>
+
+</div>
 
 </div>
 
