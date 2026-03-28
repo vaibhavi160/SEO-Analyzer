@@ -1,55 +1,160 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
-<title>AI SEO Auditor</title>
-
-<link rel="stylesheet" href="style.css">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEO Auditor Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-
 <body>
 
-<h1>AI SEO Auditor</h1>
+<div class="noise"></div>
 
-<input id="urlInput" placeholder="Enter website">
+<header>
+  <div class="logo">
+    <span class="logo-icon">◈</span>
+    <span>SEO Auditor <em>Pro</em></span>
+  </div>
+  <div class="header-pill">45 Checks</div>
+</header>
 
-<button onclick="analyze()">Analyze</button>
+<main>
 
-<h2>SEO Score Graph</h2>
+  <!-- Hero Input -->
+  <section class="hero">
+    <h1>Audit. Compare. <span class="accent">Dominate.</span></h1>
+    <p class="subtitle">Deep SEO analysis across 45 signals with multi-site comparison</p>
+    <div class="input-row">
+      <input id="urlInput" type="url" placeholder="https://yourwebsite.com" autocomplete="off" />
+      <button id="analyzeBtn" onclick="analyze()">
+        <span class="btn-text">Analyze</span>
+        <span class="btn-icon">→</span>
+      </button>
+    </div>
+    <div id="errorMsg" class="error-msg" style="display:none"></div>
+  </section>
 
-<canvas id="scoreChart"></canvas>
+  <!-- Loading -->
+  <div id="loadingState" style="display:none" class="loading-wrap">
+    <div class="spinner"></div>
+    <p id="loadingText">Crawling site…</p>
+  </div>
 
-<h2>SEO Checks (42 Features)</h2>
+  <!-- Results -->
+  <div id="results" style="display:none">
 
-<div id="featureGrid" class="feature-grid"></div>
+    <!-- Top bar -->
+    <div class="results-header">
+      <div class="results-url" id="resultsUrl"></div>
+      <div class="results-actions">
+        <button class="action-btn" onclick="downloadPDF()">⬇ Download PDF</button>
+        <button class="action-btn secondary" onclick="clearAll()">✕ Clear All</button>
+      </div>
+    </div>
 
-<h2>SEO Suggestions</h2>
+    <!-- Score hero -->
+    <div class="score-section" id="scoreSection">
+      <div class="score-ring-wrap">
+        <canvas id="scoreDonut" width="180" height="180"></canvas>
+        <div class="score-center">
+          <span id="scoreNumber" class="score-num">0</span>
+          <span class="score-label">/ 100</span>
+        </div>
+      </div>
+      <div class="score-meta">
+        <h2 id="scoreTitle">SEO Score</h2>
+        <p id="scoreDesc" class="score-desc"></p>
+        <div class="checks-row">
+          <span class="check-badge pass" id="passCount">0 passed</span>
+          <span class="check-badge fail" id="failCount">0 failed</span>
+        </div>
+      </div>
+    </div>
 
-<ul id="suggestions"></ul>
+    <!-- Category scores -->
+    <div class="section-label">Score by Category</div>
+    <div class="category-grid" id="categoryGrid"></div>
 
-<h2>Website Comparison</h2>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'overview')">Overview</button>
+      <button class="tab" onclick="switchTab(this,'checks')">Checks</button>
+      <button class="tab" onclick="switchTab(this,'charts')">Charts</button>
+      <button class="tab" onclick="switchTab(this,'compare')">Compare</button>
+    </div>
 
-<table border="1">
+    <!-- Tab: Overview -->
+    <div id="tab-overview" class="tab-pane active">
+      <div class="feature-grid" id="featureGrid"></div>
+    </div>
 
-<thead>
-<tr>
-<th>Website</th>
-<th>Score</th>
-<th>Words</th>
-<th>Images</th>
-<th>Links</th>
-<th>H1</th>
-</tr>
-</thead>
+    <!-- Tab: Checks -->
+    <div id="tab-checks" class="tab-pane">
+      <div class="checks-filter">
+        <button class="filter-btn active" onclick="filterChecks(this,'all')">All</button>
+        <button class="filter-btn" onclick="filterChecks(this,'pass')">Passed</button>
+        <button class="filter-btn" onclick="filterChecks(this,'fail')">Failed</button>
+      </div>
+      <div id="checksList"></div>
+    </div>
 
-<tbody id="comparisonTable"></tbody>
+    <!-- Tab: Charts -->
+    <div id="tab-charts" class="tab-pane">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Category Scores</div>
+          <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Content Breakdown</div>
+          <div class="chart-wrap"><canvas id="contentChart"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="chart-title">SEO Metrics Bar Chart</div>
+          <div class="chart-wrap tall"><canvas id="barChart"></canvas></div>
+        </div>
+      </div>
+    </div>
 
-</table>
+    <!-- Tab: Compare -->
+    <div id="tab-compare" class="tab-pane">
+      <p class="compare-hint">Analyze multiple sites to compare them side by side.</p>
+      <div class="compare-chart-wrap">
+        <canvas id="compareChart"></canvas>
+      </div>
+      <div class="compare-table-wrap">
+        <table class="compare-table" id="compareTable">
+          <thead>
+            <tr>
+              <th>Website</th><th>Score</th><th>Words</th>
+              <th>Images</th><th>Links</th><th>H1</th>
+              <th>HTTPS</th><th>Sitemap</th><th>Load ms</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody">
+            <tr class="empty-row"><td colspan="9">Analyze a site to begin comparison</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="section-label" style="margin-top:2.5rem">Action Items</div>
+    <div id="suggestionsList" class="suggestions-list"></div>
+
+  </div><!-- /results -->
+
+</main>
+
+<!-- PDF export area (hidden) -->
+<div id="pdfArea" style="display:none"></div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
