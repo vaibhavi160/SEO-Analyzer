@@ -1,10 +1,20 @@
 let historyData = [];
 
-function toggleDarkMode() {
+let seoChart = null;
+
+let compareChart = null;
+
+
+// DARK MODE
+function toggleDarkMode(){
+
 document.body.classList.toggle("dark");
+
 }
 
-async function analyze() {
+
+// ANALYZE FUNCTION
+async function analyze(){
 
 const urlInput = document.getElementById("urlInput");
 
@@ -14,7 +24,7 @@ const loading = document.getElementById("loading");
 
 let url = urlInput.value.trim();
 
-if (!url) {
+if(!url){
 
 resultDiv.innerHTML = "Enter URL";
 
@@ -26,19 +36,19 @@ loading.classList.remove("hidden");
 
 resultDiv.innerHTML = "";
 
-try {
+try{
 
-const response = await fetch("/analyze", {
+const response = await fetch("/analyze",{
 
-method: "POST",
+method:"POST",
 
-headers: {
+headers:{
 
-"Content-Type": "application/json"
+"Content-Type":"application/json"
 
 },
 
-body: JSON.stringify({ url })
+body:JSON.stringify({url})
 
 });
 
@@ -46,9 +56,9 @@ const data = await response.json();
 
 loading.classList.add("hidden");
 
-if (data.error) {
+if(data.error){
 
-resultDiv.innerHTML = data.error;
+resultDiv.innerHTML=data.error;
 
 return;
 
@@ -58,19 +68,42 @@ historyData.push({
 
 url,
 
-score: data.score
+score:data.score
 
 });
 
-let html = `
+renderUI(data);
+
+renderCharts(data);
+
+}
+
+catch{
+
+loading.classList.add("hidden");
+
+resultDiv.innerHTML="Server error";
+
+}
+
+}
+
+
+// UI RENDER
+function renderUI(data){
+
+const resultDiv=document.getElementById("result");
+
+let html=`
 
 <div class="card">
 
-<h2>SEO Score: ${data.score}/100</h2>
+<div class="score">${data.score}/100</div>
 
-<p>Grade: ${data.grade}</p>
+<p style="text-align:center">Grade: ${data.grade}</p>
 
 </div>
+
 
 <div class="card">
 
@@ -80,9 +113,8 @@ let html = `
 
 <p><b>Meta Description:</b> ${data.metaDescription || "Not Found"}</p>
 
-<p><b>Canonical:</b> ${data.canonical || "Not Found"}</p>
-
 </div>
+
 
 <div class="card">
 
@@ -106,68 +138,182 @@ let html = `
 
 </div>
 
+
 <div class="card">
 
 <h3>Top Keywords</h3>
 
 <ul>
 
-${data.keywords.map(k => `<li>${k[0]} (${k[1]})</li>`).join("")}
+${data.keywords.map(k=>`<li>${k[0]} (${k[1]})</li>`).join("")}
 
 </ul>
 
 </div>
+
 
 <div class="card">
 
-<h3>SEO Issues</h3>
+<h3>SEO Suggestions</h3>
 
 <ul>
 
-${data.suggestions.map(s => `<li>${s}</li>`).join("")}
+${data.suggestions.map(s=>`<li>${s}</li>`).join("")}
 
 </ul>
 
 </div>
 
+<canvas id="seoChart"></canvas>
+
 `;
 
-resultDiv.innerHTML = html;
+if(historyData.length>1){
 
-} catch {
-
-loading.classList.add("hidden");
-
-resultDiv.innerHTML = "Server error";
+html+=`<canvas id="compareChart"></canvas>`;
 
 }
 
+resultDiv.innerHTML=html;
+
 }
 
-function downloadCSV() {
 
-let csv = "URL,Score\n";
+// CHARTS
+function renderCharts(data){
 
-historyData.forEach(d => {
+setTimeout(()=>{
 
-csv += `${d.url},${d.score}\n`;
+if(seoChart) seoChart.destroy();
+
+if(compareChart) compareChart.destroy();
+
+
+seoChart=new Chart(document.getElementById("seoChart"),{
+
+type:"bar",
+
+data:{
+
+labels:["H1","H2","Images","Missing Alt","Links"],
+
+datasets:[{
+
+label:"SEO Metrics",
+
+data:[
+
+data.h1Count,
+
+data.h2Count,
+
+data.totalImages,
+
+data.imagesWithoutAlt,
+
+data.links
+
+]
+
+}]
+
+}
 
 });
 
-const blob = new Blob([csv]);
 
-const link = document.createElement("a");
+if(historyData.length>1){
 
-link.href = URL.createObjectURL(blob);
+compareChart=new Chart(document.getElementById("compareChart"),{
 
-link.download = "seo_report.csv";
+type:"line",
+
+data:{
+
+labels:historyData.map(d=>d.url),
+
+datasets:[{
+
+label:"SEO Score Comparison",
+
+data:historyData.map(d=>d.score)
+
+}]
+
+}
+
+});
+
+}
+
+},200);
+
+}
+
+
+// CSV DOWNLOAD
+function downloadCSV(){
+
+if(historyData.length===0){
+
+alert("No data");
+
+return;
+
+}
+
+let csv="URL,Score\n";
+
+historyData.forEach(d=>{
+
+csv+=`${d.url},${d.score}\n`;
+
+});
+
+const blob=new Blob([csv]);
+
+const link=document.createElement("a");
+
+link.href=URL.createObjectURL(blob);
+
+link.download="seo_report.csv";
 
 link.click();
 
 }
 
-function downloadPDF() {
 
-window.print();
+// PDF DOWNLOAD
+function downloadPDF(){
+
+const content=document.getElementById("result").innerHTML;
+
+const win=window.open("","","width=900,height=700");
+
+win.document.write(`
+
+<html>
+
+<head>
+
+<title>SEO Report</title>
+
+</head>
+
+<body>
+
+<h1>SEO Report</h1>
+
+${content}
+
+</body>
+
+</html>
+
+`);
+
+win.document.close();
+
+win.print();
 
 }

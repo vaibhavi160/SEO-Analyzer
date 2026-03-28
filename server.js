@@ -10,40 +10,47 @@ app.use(express.json());
 app.use(express.static("public"));
 
 app.post("/analyze", async (req, res) => {
+
   let { url } = req.body;
 
   try {
+
     if (!url.startsWith("http")) {
       url = "https://" + url;
     }
 
     const { data } = await axios.get(url, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120"
+        "User-Agent": "Mozilla/5.0"
       },
       timeout: 10000
     });
 
     const $ = cheerio.load(data);
 
-    // BASIC SEO
+    // TITLE
     const title = $("title").text().trim();
+
+    // META TAGS
     const metaDescription =
       $('meta[name="description"]').attr("content") || "";
 
-    const metaRobots = $('meta[name="robots"]').attr("content") || "";
-    const metaKeywords = $('meta[name="keywords"]').attr("content") || "";
-    const canonical = $('link[rel="canonical"]').attr("href") || "";
+    const metaRobots =
+      $('meta[name="robots"]').attr("content") || "";
 
-    // SOCIAL SEO
-    const ogTitle = $('meta[property="og:title"]').attr("content") || "";
+    const canonical =
+      $('link[rel="canonical"]').attr("href") || "";
+
+    // OPEN GRAPH
+    const ogTitle =
+      $('meta[property="og:title"]').attr("content") || "";
+
     const ogDescription =
       $('meta[property="og:description"]').attr("content") || "";
-    const ogImage = $('meta[property="og:image"]').attr("content") || "";
 
     // STRUCTURED DATA
-    const structuredData = $('script[type="application/ld+json"]').length;
+    const structuredData =
+      $('script[type="application/ld+json"]').length;
 
     // HEADINGS
     const h1Count = $("h1").length;
@@ -60,7 +67,7 @@ app.post("/analyze", async (req, res) => {
       if (!$(el).attr("alt")) imagesWithoutAlt++;
     });
 
-    // KEYWORD DENSITY
+    // KEYWORDS
     const text = $("body").text().toLowerCase();
     const words = text.match(/\b\w+\b/g) || [];
     const wordCount = {};
@@ -76,31 +83,55 @@ app.post("/analyze", async (req, res) => {
       .slice(0, 10);
 
     // PAGE SIZE
-    const htmlSizeKB = (Buffer.byteLength(data) / 1024).toFixed(2);
+    const htmlSizeKB =
+      (Buffer.byteLength(data) / 1024).toFixed(2);
 
     // MOBILE
-    const hasViewport = $('meta[name="viewport"]').length > 0;
+    const hasViewport =
+      $('meta[name="viewport"]').length > 0;
 
     // HTTPS
-    const isHTTPS = url.startsWith("https");
+    const isHTTPS =
+      url.startsWith("https");
 
-    // SUGGESTIONS
+    // FAVICON
+    const favicon =
+      $('link[rel="icon"]').attr("href") ||
+      $('link[rel="shortcut icon"]').attr("href");
+
+    // ROBOTS.TXT CHECK
+    let hasRobots = false;
+
+    try {
+      await axios.get(url + "/robots.txt");
+      hasRobots = true;
+    } catch {}
+
+    // SITEMAP CHECK
+    let hasSitemap = false;
+
+    try {
+      await axios.get(url + "/sitemap.xml");
+      hasSitemap = true;
+    } catch {}
+
+    // SEO SUGGESTIONS
     let suggestions = [];
 
     if (!title)
       suggestions.push("Title tag missing");
 
     else if (title.length < 30)
-      suggestions.push("Title too short (30–60 characters recommended)");
+      suggestions.push("Title too short (30–60 recommended)");
 
     else if (title.length > 60)
       suggestions.push("Title too long");
 
     if (!metaDescription)
-      suggestions.push("Meta description tag missing");
+      suggestions.push("Meta description missing");
 
     else if (metaDescription.length < 120)
-      suggestions.push("Meta description too short (120–160 recommended)");
+      suggestions.push("Meta description too short");
 
     else if (metaDescription.length > 160)
       suggestions.push("Meta description too long");
@@ -115,7 +146,7 @@ app.post("/analyze", async (req, res) => {
       suggestions.push("Open Graph tags missing");
 
     if (structuredData === 0)
-      suggestions.push("No structured data (Schema.org) detected");
+      suggestions.push("No structured data detected");
 
     if (h1Count === 0)
       suggestions.push("No H1 tag found");
@@ -127,57 +158,86 @@ app.post("/analyze", async (req, res) => {
       suggestions.push(imagesWithoutAlt + " images missing alt text");
 
     if (!hasViewport)
-      suggestions.push("Viewport meta tag missing (mobile optimization)");
+      suggestions.push("Viewport meta tag missing");
 
     if (!isHTTPS)
       suggestions.push("Website not using HTTPS");
 
+    if (!favicon)
+      suggestions.push("Favicon missing");
+
+    if (!hasRobots)
+      suggestions.push("robots.txt file missing");
+
+    if (!hasSitemap)
+      suggestions.push("sitemap.xml not found");
+
     // SCORE
-    let score = 100 - suggestions.length * 7;
+    let score = 100 - suggestions.length * 6;
 
     if (score < 0) score = 0;
 
     let grade = "Poor";
 
-    if (score > 85) grade = "Excellent";
-    else if (score > 70) grade = "Good";
-    else if (score > 50) grade = "Average";
+    if (score > 85)
+      grade = "Excellent";
+
+    else if (score > 70)
+      grade = "Good";
+
+    else if (score > 50)
+      grade = "Average";
 
     res.json({
+
       url,
+
       title,
+
       metaDescription,
-      metaRobots,
-      metaKeywords,
-      canonical,
-      ogTitle,
-      ogDescription,
-      ogImage,
-      structuredData,
+
       h1Count,
+
       h2Count,
+
       totalImages: images.length,
+
       imagesWithoutAlt,
+
       links,
+
       htmlSizeKB,
+
       hasViewport,
+
       isHTTPS,
+
       keywords,
+
       score,
+
       grade,
+
       suggestions
+
     });
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     res.status(500).json({
       error: "Website blocked or not accessible"
     });
+
   }
+
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
+
   console.log("Server running on port " + PORT);
+
 });
