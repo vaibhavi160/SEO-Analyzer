@@ -1,31 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SEO Analyzer</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<title>SEO Analyzer</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
 
 <div class="container">
 
-  <h1>🌿 SEO Analyzer Dashboard</h1>
+<h1>SEO Analyzer Dashboard</h1>
 
-  <div class="top-bar">
-    <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
-    <button onclick="downloadCSV()">📥 Download CSV File</button>
-     <button onclick="downloadPDF()">📄 Download PDF</button>
-  </div>
+<div class="top-bar">
 
-  <div class="search-box">
-    <input type="text" id="urlInput" placeholder="Enter website URL...">
-    <button onclick="analyze()">Analyze</button>
-  </div>
+<button onclick="toggleDarkMode()">Dark Mode</button>
 
-  <div id="loading" class="hidden">Analyzing... ⏳</div>
+<button onclick="downloadCSV()">Download CSV</button>
 
-  <div id="result"></div>
+<button onclick="downloadPDF()">Download PDF</button>
+
+</div>
+
+<div class="search-box">
+
+<input type="text" id="urlInput" placeholder="Enter website URL">
+
+<button onclick="analyze()">Analyze</button>
+
+</div>
+
+<div id="loading" class="hidden">Analyzing...</div>
+
+<div id="result"></div>
 
 </div>
 

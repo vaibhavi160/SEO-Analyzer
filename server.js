@@ -27,16 +27,32 @@ app.post("/analyze", async (req, res) => {
 
     const $ = cheerio.load(data);
 
-    // 📄 Basic SEO
+    // BASIC SEO
     const title = $("title").text().trim();
     const metaDescription =
       $('meta[name="description"]').attr("content") || "";
 
+    const metaRobots = $('meta[name="robots"]').attr("content") || "";
+    const metaKeywords = $('meta[name="keywords"]').attr("content") || "";
+    const canonical = $('link[rel="canonical"]').attr("href") || "";
+
+    // SOCIAL SEO
+    const ogTitle = $('meta[property="og:title"]').attr("content") || "";
+    const ogDescription =
+      $('meta[property="og:description"]').attr("content") || "";
+    const ogImage = $('meta[property="og:image"]').attr("content") || "";
+
+    // STRUCTURED DATA
+    const structuredData = $('script[type="application/ld+json"]').length;
+
+    // HEADINGS
     const h1Count = $("h1").length;
     const h2Count = $("h2").length;
+
+    // LINKS
     const links = $("a").length;
 
-    // 🖼 Images
+    // IMAGES
     const images = $("img");
     let imagesWithoutAlt = 0;
 
@@ -44,7 +60,7 @@ app.post("/analyze", async (req, res) => {
       if (!$(el).attr("alt")) imagesWithoutAlt++;
     });
 
-    // 🔍 Keyword Density
+    // KEYWORD DENSITY
     const text = $("body").text().toLowerCase();
     const words = text.match(/\b\w+\b/g) || [];
     const wordCount = {};
@@ -59,38 +75,85 @@ app.post("/analyze", async (req, res) => {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
 
-    // ⚡ Extra checks
+    // PAGE SIZE
     const htmlSizeKB = (Buffer.byteLength(data) / 1024).toFixed(2);
+
+    // MOBILE
     const hasViewport = $('meta[name="viewport"]').length > 0;
+
+    // HTTPS
     const isHTTPS = url.startsWith("https");
 
-    // 🎯 Suggestions
+    // SUGGESTIONS
     let suggestions = [];
 
-    if (!metaDescription) suggestions.push("Add meta description");
-    if (title.length < 30 || title.length > 60)
-      suggestions.push("Optimize title length (30–60 chars)");
-    if (h1Count === 0) suggestions.push("Add at least one H1 tag");
-    if (imagesWithoutAlt > 0)
-      suggestions.push("Add alt text to images");
-    if (!hasViewport)
-      suggestions.push("Add viewport for mobile responsiveness");
-    if (!isHTTPS)
-      suggestions.push("Use HTTPS for security");
+    if (!title)
+      suggestions.push("Title tag missing");
 
-    // 🧠 Score
-    let score = 100 - suggestions.length * 10;
+    else if (title.length < 30)
+      suggestions.push("Title too short (30–60 characters recommended)");
+
+    else if (title.length > 60)
+      suggestions.push("Title too long");
+
+    if (!metaDescription)
+      suggestions.push("Meta description tag missing");
+
+    else if (metaDescription.length < 120)
+      suggestions.push("Meta description too short (120–160 recommended)");
+
+    else if (metaDescription.length > 160)
+      suggestions.push("Meta description too long");
+
+    if (!metaRobots)
+      suggestions.push("Meta robots tag missing");
+
+    if (!canonical)
+      suggestions.push("Canonical tag missing");
+
+    if (!ogTitle || !ogDescription)
+      suggestions.push("Open Graph tags missing");
+
+    if (structuredData === 0)
+      suggestions.push("No structured data (Schema.org) detected");
+
+    if (h1Count === 0)
+      suggestions.push("No H1 tag found");
+
+    if (h1Count > 1)
+      suggestions.push("Multiple H1 tags found");
+
+    if (imagesWithoutAlt > 0)
+      suggestions.push(imagesWithoutAlt + " images missing alt text");
+
+    if (!hasViewport)
+      suggestions.push("Viewport meta tag missing (mobile optimization)");
+
+    if (!isHTTPS)
+      suggestions.push("Website not using HTTPS");
+
+    // SCORE
+    let score = 100 - suggestions.length * 7;
+
     if (score < 0) score = 0;
 
     let grade = "Poor";
-    if (score > 80) grade = "Excellent";
-    else if (score > 60) grade = "Good";
-    else if (score > 40) grade = "Average";
+
+    if (score > 85) grade = "Excellent";
+    else if (score > 70) grade = "Good";
+    else if (score > 50) grade = "Average";
 
     res.json({
       url,
       title,
       metaDescription,
+      metaRobots,
+      metaKeywords,
+      canonical,
+      ogTitle,
+      ogDescription,
+      ogImage,
+      structuredData,
       h1Count,
       h2Count,
       totalImages: images.length,
@@ -106,10 +169,9 @@ app.post("/analyze", async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error.message);
 
     res.status(500).json({
-      error: "⚠ Website blocked or not accessible"
+      error: "Website blocked or not accessible"
     });
   }
 });

@@ -1,204 +1,173 @@
 let historyData = [];
-let seoChart = null;
-let compareChart = null;
 
-// 🌙 Dark Mode
 function toggleDarkMode() {
-  document.body.classList.toggle("dark");
+document.body.classList.toggle("dark");
 }
 
-// 🚀 MAIN FUNCTION
 async function analyze() {
-  const urlInput = document.getElementById("urlInput");
-  const resultDiv = document.getElementById("result");
-  const loading = document.getElementById("loading");
 
-  let url = urlInput.value.trim();
+const urlInput = document.getElementById("urlInput");
 
-  if (!url) {
-    resultDiv.innerHTML = `<div class="card">❌ Please enter a URL</div>`;
-    return;
-  }
+const resultDiv = document.getElementById("result");
 
-  loading.innerHTML = "🔍 Analyzing website...";
-  loading.classList.remove("hidden");
-  resultDiv.innerHTML = "";
+const loading = document.getElementById("loading");
 
-  try {
-    const response = await fetch("/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ url })
-    });
+let url = urlInput.value.trim();
 
-    const data = await response.json();
-    loading.classList.add("hidden");
+if (!url) {
 
-    if (data.error) {
-      resultDiv.innerHTML = `<div class="card">❌ ${data.error}</div>`;
-      return;
-    }
+resultDiv.innerHTML = "Enter URL";
 
-    // 📊 Save history
-    historyData.push({
-      url,
-      score: data.score
-    });
+return;
 
-    renderUI(data);
-    renderCharts(data);
-
-  } catch (error) {
-    loading.classList.add("hidden");
-    resultDiv.innerHTML = `<div class="card">❌ Server error</div>`;
-  }
 }
 
-// 🎨 UI RENDER
-function renderUI(data) {
-  const resultDiv = document.getElementById("result");
+loading.classList.remove("hidden");
 
-  let html = `
-    <div class="card">
-      <div class="score">${data.score}/100</div>
-      <p style="text-align:center;">Grade: <strong>${data.grade}</strong></p>
-    </div>
+resultDiv.innerHTML = "";
 
-    <div class="card">
-      <h3>📄 Page Info</h3>
-      <p><strong>Title:</strong> ${data.title || "Not Found"}</p>
-      <p><strong>Meta:</strong> ${data.metaDescription || "Not Found"}</p>
-    </div>
+try {
 
-    <div class="card">
-      <h3>📊 SEO Stats</h3>
-      <p>H1 Tags: ${data.h1Count}</p>
-      <p>H2 Tags: ${data.h2Count}</p>
-      <p>Total Images: ${data.totalImages}</p>
-      <p>Missing Alt: ${data.imagesWithoutAlt}</p>
-      <p>Links: ${data.links}</p>
-      <p>Page Size: ${data.htmlSizeKB} KB</p>
-      <p>Mobile Friendly: ${data.hasViewport ? "✅ Yes" : "❌ No"}</p>
-      <p>HTTPS: ${data.isHTTPS ? "🔒 Secure" : "⚠ Not Secure"}</p>
-    </div>
+const response = await fetch("/analyze", {
 
-    <div class="card">
-      <h3>🔍 Top Keywords</h3>
-      <ul>
-        ${
-          data.keywords?.length
-            ? data.keywords.map(k => `<li><b>${k[0]}</b> (${k[1]})</li>`).join("")
-            : "<li>No keyword data</li>"
-        }
-      </ul>
-    </div>
+method: "POST",
 
-    <div class="card">
-      <h3>⚠ Suggestions</h3>
-      <ul>
-        ${data.suggestions.map(s => `<li>${s}</li>`).join("")}
-      </ul>
-    </div>
+headers: {
 
-    <canvas id="seoChart"></canvas>
-  `;
+"Content-Type": "application/json"
 
-  if (historyData.length > 1) {
-    html += `<canvas id="compareChart"></canvas>`;
-  }
+},
 
-  resultDiv.innerHTML = html;
+body: JSON.stringify({ url })
+
+});
+
+const data = await response.json();
+
+loading.classList.add("hidden");
+
+if (data.error) {
+
+resultDiv.innerHTML = data.error;
+
+return;
+
 }
 
-// 📊 CHARTS
-function renderCharts(data) {
+historyData.push({
 
-  setTimeout(() => {
+url,
 
-    if (seoChart) seoChart.destroy();
-    if (compareChart) compareChart.destroy();
+score: data.score
 
-    // 📊 Main Chart
-    seoChart = new Chart(document.getElementById("seoChart"), {
-      type: "bar",
-      data: {
-        labels: ["H1", "H2", "Images", "Missing Alt", "Links"],
-        datasets: [{
-          label: "SEO Metrics",
-          data: [
-            data.h1Count,
-            data.h2Count,
-            data.totalImages,
-            data.imagesWithoutAlt,
-            data.links
-          ]
-        }]
-      }
-    });
+});
 
-    // 📈 Comparison Chart
-    if (historyData.length > 1) {
-      compareChart = new Chart(document.getElementById("compareChart"), {
-        type: "line",
-        data: {
-          labels: historyData.map(d => d.url),
-          datasets: [{
-            label: "SEO Score Comparison",
-            data: historyData.map(d => d.score)
-          }]
-        }
-      });
-    }
+let html = `
 
-  }, 200);
+<div class="card">
+
+<h2>SEO Score: ${data.score}/100</h2>
+
+<p>Grade: ${data.grade}</p>
+
+</div>
+
+<div class="card">
+
+<h3>Page Info</h3>
+
+<p><b>Title:</b> ${data.title || "Not Found"}</p>
+
+<p><b>Meta Description:</b> ${data.metaDescription || "Not Found"}</p>
+
+<p><b>Canonical:</b> ${data.canonical || "Not Found"}</p>
+
+</div>
+
+<div class="card">
+
+<h3>SEO Stats</h3>
+
+<p>H1 Tags: ${data.h1Count}</p>
+
+<p>H2 Tags: ${data.h2Count}</p>
+
+<p>Total Images: ${data.totalImages}</p>
+
+<p>Missing Alt: ${data.imagesWithoutAlt}</p>
+
+<p>Links: ${data.links}</p>
+
+<p>Page Size: ${data.htmlSizeKB} KB</p>
+
+<p>Mobile Friendly: ${data.hasViewport ? "Yes" : "No"}</p>
+
+<p>HTTPS: ${data.isHTTPS ? "Secure" : "Not Secure"}</p>
+
+</div>
+
+<div class="card">
+
+<h3>Top Keywords</h3>
+
+<ul>
+
+${data.keywords.map(k => `<li>${k[0]} (${k[1]})</li>`).join("")}
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h3>SEO Issues</h3>
+
+<ul>
+
+${data.suggestions.map(s => `<li>${s}</li>`).join("")}
+
+</ul>
+
+</div>
+
+`;
+
+resultDiv.innerHTML = html;
+
+} catch {
+
+loading.classList.add("hidden");
+
+resultDiv.innerHTML = "Server error";
+
 }
 
-// 📥 CSV DOWNLOAD
+}
+
 function downloadCSV() {
-  if (historyData.length === 0) {
-    alert("No data available");
-    return;
-  }
 
-  let csv = "URL,Score\n";
+let csv = "URL,Score\n";
 
-  historyData.forEach(d => {
-    csv += `${d.url},${d.score}\n`;
-  });
+historyData.forEach(d => {
 
-  const blob = new Blob([csv], { type: "text/csv" });
-  const link = document.createElement("a");
+csv += `${d.url},${d.score}\n`;
 
-  link.href = URL.createObjectURL(blob);
-  link.download = "seo_report.csv";
-  link.click();
+});
+
+const blob = new Blob([csv]);
+
+const link = document.createElement("a");
+
+link.href = URL.createObjectURL(blob);
+
+link.download = "seo_report.csv";
+
+link.click();
+
 }
 
-// 📄 PDF DOWNLOAD
 function downloadPDF() {
-  const content = document.getElementById("result").innerHTML;
 
-  const win = window.open("", "", "width=900,height=700");
+window.print();
 
-  win.document.write(`
-    <html>
-      <head>
-        <title>SEO Report</title>
-        <style>
-          body { font-family: Arial; padding: 20px; }
-          h1 { text-align: center; }
-          .card { margin-bottom: 20px; }
-        </style>
-      </head>
-      <body>
-        <h1>SEO Analysis Report</h1>
-        ${content}
-      </body>
-    </html>
-  `);
-
-  win.document.close();
-  win.print();
 }
