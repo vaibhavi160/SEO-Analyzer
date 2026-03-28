@@ -3,157 +3,223 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SEO Auditor Pro</title>
+  <title>PulseRank — SEO Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-<div class="noise"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="grid-overlay"></div>
 
-<header>
-  <div class="logo">
-    <span class="logo-icon">◈</span>
-    <span>SEO Auditor <em>Pro</em></span>
-  </div>
-  <div class="header-pill">45 Checks</div>
-</header>
-
-<main>
-
-  <!-- Hero Input -->
-  <section class="hero">
-    <h1>Audit. Compare. <span class="accent">Dominate.</span></h1>
-    <p class="subtitle">Deep SEO analysis across 45 signals with multi-site comparison</p>
-    <div class="input-row">
-      <input id="urlInput" type="url" placeholder="https://yourwebsite.com" autocomplete="off" />
-      <button id="analyzeBtn" onclick="analyze()">
-        <span class="btn-text">Analyze</span>
-        <span class="btn-icon">→</span>
-      </button>
+  <nav>
+    <div class="nav-inner">
+      <div class="brand">
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+          <rect width="30" height="30" rx="9" fill="url(#bg)"/>
+          <path d="M9 21 L15 9 L21 21" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11.5 16.5 H18.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <defs><linearGradient id="bg" x1="0" y1="0" x2="30" y2="30"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+        </svg>
+        <span>PulseRank</span>
+      </div>
+      <div class="nav-right">
+        <span class="nbadge">45 Checks</span>
+        <span class="nbadge green">Free</span>
+      </div>
     </div>
-    <div id="errorMsg" class="error-msg" style="display:none"></div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      AI-Powered SEO Intelligence
+    </div>
+    <h1>Know exactly why your site<br/><em>ranks — or doesn't.</em></h1>
+    <p class="hero-sub">Deep-scan any URL across 45 SEO signals. Get category scores, interactive charts, multi-site comparison, and a downloadable PDF report.</p>
+
+    <div class="search-wrap">
+      <div class="search-box" id="searchBox">
+        <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="urlInput" type="url" placeholder="https://yourwebsite.com" autocomplete="off" spellcheck="false"/>
+        <button id="analyzeBtn" onclick="analyze()">
+          <span id="btnLabel">Analyze</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div id="errorMsg" class="err-toast" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="errText"></span>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hs"><span class="hs-n">45</span><span class="hs-l">SEO Signals</span></div>
+      <div class="hs-sep"></div>
+      <div class="hs"><span class="hs-n">8</span><span class="hs-l">Categories</span></div>
+      <div class="hs-sep"></div>
+      <div class="hs"><span class="hs-n">PDF</span><span class="hs-l">Export</span></div>
+      <div class="hs-sep"></div>
+      <div class="hs"><span class="hs-n">∞</span><span class="hs-l">Comparisons</span></div>
+    </div>
   </section>
 
-  <!-- Loading -->
-  <div id="loadingState" style="display:none" class="loading-wrap">
-    <div class="spinner"></div>
-    <p id="loadingText">Crawling site…</p>
+  <!-- Loader -->
+  <div id="loadingState" style="display:none" class="loader-wrap">
+    <div class="loader-card">
+      <div class="loader-visual">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring r2"></div>
+        <svg class="loader-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <p id="loadingStep" class="ls-text">Crawling site…</p>
+      <p class="ls-sub">Running 45 checks across 8 categories</p>
+      <div class="ls-steps">
+        <span class="lss active" id="ls0">Crawl</span>
+        <span class="lss" id="ls1">Meta</span>
+        <span class="lss" id="ls2">Content</span>
+        <span class="lss" id="ls3">Technical</span>
+        <span class="lss" id="ls4">Score</span>
+      </div>
+    </div>
   </div>
 
   <!-- Results -->
-  <div id="results" style="display:none">
+  <div id="results" style="display:none" class="results-wrap">
 
-    <!-- Top bar -->
-    <div class="results-header">
-      <div class="results-url" id="resultsUrl"></div>
-      <div class="results-actions">
-        <button class="action-btn" onclick="downloadPDF()">⬇ Download PDF</button>
-        <button class="action-btn secondary" onclick="clearAll()">✕ Clear All</button>
-      </div>
-    </div>
-
-    <!-- Score hero -->
-    <div class="score-section" id="scoreSection">
-      <div class="score-ring-wrap">
-        <canvas id="scoreDonut" width="180" height="180"></canvas>
-        <div class="score-center">
-          <span id="scoreNumber" class="score-num">0</span>
-          <span class="score-label">/ 100</span>
-        </div>
-      </div>
-      <div class="score-meta">
-        <h2 id="scoreTitle">SEO Score</h2>
-        <p id="scoreDesc" class="score-desc"></p>
-        <div class="checks-row">
-          <span class="check-badge pass" id="passCount">0 passed</span>
-          <span class="check-badge fail" id="failCount">0 failed</span>
+    <div class="rbar">
+      <div class="rbar-inner">
+        <div class="rbar-url" id="resultsUrl"></div>
+        <div class="rbar-actions">
+          <button class="ra-btn primary" onclick="downloadPDF()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF Report
+          </button>
+          <button class="ra-btn ghost" onclick="clearAll()">✕ Clear</button>
         </div>
       </div>
     </div>
 
-    <!-- Category scores -->
-    <div class="section-label">Score by Category</div>
-    <div class="category-grid" id="categoryGrid"></div>
+    <div class="ri">
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab(this,'overview')">Overview</button>
-      <button class="tab" onclick="switchTab(this,'checks')">Checks</button>
-      <button class="tab" onclick="switchTab(this,'charts')">Charts</button>
-      <button class="tab" onclick="switchTab(this,'compare')">Compare</button>
-    </div>
-
-    <!-- Tab: Overview -->
-    <div id="tab-overview" class="tab-pane active">
-      <div class="feature-grid" id="featureGrid"></div>
-    </div>
-
-    <!-- Tab: Checks -->
-    <div id="tab-checks" class="tab-pane">
-      <div class="checks-filter">
-        <button class="filter-btn active" onclick="filterChecks(this,'all')">All</button>
-        <button class="filter-btn" onclick="filterChecks(this,'pass')">Passed</button>
-        <button class="filter-btn" onclick="filterChecks(this,'fail')">Failed</button>
-      </div>
-      <div id="checksList"></div>
-    </div>
-
-    <!-- Tab: Charts -->
-    <div id="tab-charts" class="tab-pane">
-      <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-title">Category Scores</div>
-          <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+      <div class="top-row">
+        <div class="score-card glass">
+          <div class="donut-wrap">
+            <canvas id="scoreDonut" width="160" height="160"></canvas>
+            <div class="donut-center">
+              <span id="scoreNum" class="sc-num">—</span>
+              <span class="sc-denom">/100</span>
+            </div>
+          </div>
+          <div class="sc-info">
+            <div id="scoreGrade" class="sc-grade"></div>
+            <div id="scoreDesc" class="sc-desc"></div>
+            <div class="sc-pills">
+              <span class="scpill pass" id="passCount"></span>
+              <span class="scpill fail" id="failCount"></span>
+            </div>
+          </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">Content Breakdown</div>
-          <div class="chart-wrap"><canvas id="contentChart"></canvas></div>
+        <div class="cat-cards" id="categoryGrid"></div>
+      </div>
+
+      <div class="tnav-wrap">
+        <div class="tnav">
+          <button class="tb active" onclick="switchTab(this,'overview')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Overview
+          </button>
+          <button class="tb" onclick="switchTab(this,'checks')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Checks
+          </button>
+          <button class="tb" onclick="switchTab(this,'charts')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Charts
+          </button>
+          <button class="tb" onclick="switchTab(this,'compare')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            Compare
+          </button>
         </div>
-        <div class="chart-card wide">
-          <div class="chart-title">SEO Metrics Bar Chart</div>
-          <div class="chart-wrap tall"><canvas id="barChart"></canvas></div>
+      </div>
+
+      <div id="tab-overview" class="tpane active">
+        <div class="feat-grid" id="featureGrid"></div>
+      </div>
+
+      <div id="tab-checks" class="tpane">
+        <div class="chk-bar">
+          <div class="chk-filters">
+            <button class="chkf active" onclick="filterChecks(this,'all')">All</button>
+            <button class="chkf" onclick="filterChecks(this,'pass')"><span class="fd pass"></span>Passed</button>
+            <button class="chkf" onclick="filterChecks(this,'fail')"><span class="fd fail"></span>Failed</button>
+          </div>
+          <span id="checksCount" class="chk-count"></span>
+        </div>
+        <div id="checksList"></div>
+      </div>
+
+      <div id="tab-charts" class="tpane">
+        <div class="charts-grid">
+          <div class="chart-card glass">
+            <div class="cc-lbl">Category Radar</div>
+            <div class="cc-body"><canvas id="radarChart"></canvas></div>
+          </div>
+          <div class="chart-card glass">
+            <div class="cc-lbl">Content Mix</div>
+            <div class="cc-body"><canvas id="contentChart"></canvas></div>
+          </div>
+          <div class="chart-card wide glass">
+            <div class="cc-lbl">Key Metrics</div>
+            <div class="cc-body tall"><canvas id="barChart"></canvas></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Tab: Compare -->
-    <div id="tab-compare" class="tab-pane">
-      <p class="compare-hint">Analyze multiple sites to compare them side by side.</p>
-      <div class="compare-chart-wrap">
-        <canvas id="compareChart"></canvas>
+      <div id="tab-compare" class="tpane">
+        <p class="cmp-hint">Analyze multiple URLs — they'll appear here for side-by-side comparison.</p>
+        <div class="chart-card glass" style="margin-bottom:1.5rem">
+          <div class="cc-lbl">Score Comparison</div>
+          <div class="cc-body" style="height:240px"><canvas id="compareChart"></canvas></div>
+        </div>
+        <div class="cmp-table-wrap glass">
+          <table class="ctable">
+            <thead><tr>
+              <th>URL</th><th>Score</th><th>Words</th><th>Images</th>
+              <th>Links</th><th>H1</th><th>HTTPS</th><th>Sitemap</th><th>Load</th>
+            </tr></thead>
+            <tbody id="compareBody">
+              <tr><td colspan="9" class="ctable-empty">Analyze a site to start comparing</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="compare-table-wrap">
-        <table class="compare-table" id="compareTable">
-          <thead>
-            <tr>
-              <th>Website</th><th>Score</th><th>Words</th>
-              <th>Images</th><th>Links</th><th>H1</th>
-              <th>HTTPS</th><th>Sitemap</th><th>Load ms</th>
-            </tr>
-          </thead>
-          <tbody id="compareBody">
-            <tr class="empty-row"><td colspan="9">Analyze a site to begin comparison</td></tr>
-          </tbody>
-        </table>
+
+      <div class="sug-wrap">
+        <div class="sug-head">
+          <h3>Action Items</h3>
+          <span id="sugCount" class="sug-badge"></span>
+        </div>
+        <div id="suggestionsList"></div>
       </div>
+
     </div>
+  </div>
 
-    <!-- Suggestions -->
-    <div class="section-label" style="margin-top:2.5rem">Action Items</div>
-    <div id="suggestionsList" class="suggestions-list"></div>
-
-  </div><!-- /results -->
-
-</main>
-
-<!-- PDF export area (hidden) -->
-<div id="pdfArea" style="display:none"></div>
+  <footer>
+    <div class="foot">
+      <span class="foot-logo">PulseRank</span>
+      <span class="foot-sep">·</span>
+      <span>45-point SEO analysis </span>
+    </div>
+  </footer>
 
 <script src="script.js"></script>
 </body>
