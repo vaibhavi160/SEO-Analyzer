@@ -1,92 +1,61 @@
-let chart;
-let sites=[];
+let chart
+let sites=[]
 
 async function analyze(){
 
-const url=document.getElementById("urlInput").value;
+const url=document.getElementById("urlInput").value
 
-const response=await fetch("/analyze",{
+const res=await fetch("/analyze",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({url})
-});
+})
 
-const data=await response.json();
+const data=await res.json()
 
-document.getElementById("result").classList.remove("hidden");
+showGraph(data)
 
-showChart(data);
+showFeatures(data)
 
-showFeatures(data);
+showSuggestions(data)
 
-showKeywords(data);
+sites.push(data)
 
-showSuggestions(data);
-
-setupPDF(data);
-
-sites.push(data);
-
-renderComparison();
+renderComparison()
 
 }
 
-/* CHART */
+function showGraph(data){
 
-function showChart(data){
+const ctx=document.getElementById("scoreChart")
 
-const ctx=document.getElementById("scoreChart");
-
-if(chart) chart.destroy();
+if(chart) chart.destroy()
 
 chart=new Chart(ctx,{
 
-type:"doughnut",
+type:"bar",
 
 data:{
-labels:["Score","Remaining"],
+labels:["SEO Score"],
 datasets:[{
-data:[data.score,100-data.score]
+label:"Score",
+data:[data.score]
 }]
 }
 
-});
+})
 
 }
 
-/* FEATURE GRID */
-
 function showFeatures(data){
 
-const grid=document.getElementById("featureGrid");
+const grid=document.getElementById("featureGrid")
 
-grid.innerHTML="";
+grid.innerHTML=""
 
-const features={
+Object.entries(data).forEach(([k,v])=>{
 
-"SEO Score":data.score,
-"H1 Tags":data.h1Count,
-"H2 Tags":data.h2Count,
-"Total Images":data.totalImages,
-"Images without ALT":data.imagesWithoutAlt,
-"Internal Links":data.internalLinks,
-"External Links":data.externalLinks,
-"Word Count":data.wordTotal,
-"Paragraphs":data.paragraphCount,
-"Lists":data.listCount,
-"Scripts":data.scriptCount,
-"CSS Files":data.cssFiles,
-"Forms":data.forms,
-"Tables":data.tables,
-"Videos":data.videos,
-"HTML Size KB":data.htmlSizeKB,
-"HTTPS":data.isHTTPS,
-"Viewport":data.hasViewport,
-"HTML Lang":data.htmlLang||"Missing"
-
-};
-
-Object.entries(features).forEach(([k,v])=>{
+if(typeof v==="string"||typeof v==="number"||typeof v==="boolean"){
 
 grid.innerHTML+=`
 
@@ -98,117 +67,56 @@ grid.innerHTML+=`
 
 </div>
 
-`;
-
-});
+`
 
 }
 
-/* KEYWORDS */
-
-function showKeywords(data){
-
-const list=document.getElementById("keywords");
-
-list.innerHTML="";
-
-data.keywords.forEach(k=>{
-list.innerHTML+=`<li>${k[0]} (${k[1]})</li>`;
-});
+})
 
 }
-
-/* SUGGESTIONS */
 
 function showSuggestions(data){
 
-const list=document.getElementById("suggestions");
+const list=document.getElementById("suggestions")
 
-list.innerHTML="";
-
-data.suggestions.forEach(s=>{
-list.innerHTML+=`<li>${s}</li>`;
-});
-
-}
-
-/* PDF */
-
-function setupPDF(data){
-
-document.getElementById("downloadPDF").onclick=function(){
-
-const {jsPDF}=window.jspdf;
-
-const doc=new jsPDF();
-
-let y=20;
-
-doc.text("SEO Report",20,y);
-
-y+=10;
-
-doc.text("Website: "+data.url,20,y);
-
-y+=10;
-
-doc.text("Score: "+data.score,20,y);
-
-y+=10;
-
-doc.text("Grade: "+data.grade,20,y);
-
-y+=10;
-
-doc.text("Title: "+data.title,20,y);
-
-y+=10;
-
-doc.text("Meta Description: "+data.metaDescription,20,y);
-
-y+=10;
-
-doc.text("Suggestions:",20,y);
-
-y+=10;
+list.innerHTML=""
 
 data.suggestions.forEach(s=>{
 
-doc.text("- "+s,20,y);
+list.innerHTML+=`<li>${s}</li>`
 
-y+=8;
-
-});
-
-doc.save("seo-report.pdf");
+})
 
 }
-
-}
-
-/* COMPARISON */
 
 function renderComparison(){
 
-const table=document.getElementById("comparisonTable");
+const table=document.getElementById("comparisonTable")
 
-table.innerHTML="";
+table.innerHTML=""
 
-sites.forEach(site=>{
+sites.forEach(s=>{
 
 table.innerHTML+=`
 
 <tr>
-<td>${site.url}</td>
-<td>${site.score}</td>
-<td>${site.h1Count}</td>
-<td>${site.totalImages}</td>
-<td>${site.wordTotal}</td>
-<td>${site.grade}</td>
+
+<td>${s.url}</td>
+
+<td>${s.score}</td>
+
+<td>${s.wordCount}</td>
+
+<td>${s.totalImages}</td>
+
+<td>${s.totalLinks}</td>
+
+<td>${s.h1Count}</td>
+
 </tr>
 
-`;
+`
 
-});
+})
 
 }

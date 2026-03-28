@@ -8,8 +8,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 </head>
 
 <body>
@@ -20,48 +18,36 @@
 
 <button onclick="analyze()">Analyze</button>
 
-<div id="result" class="hidden">
-
-<h2>SEO Score</h2>
+<h2>SEO Score Graph</h2>
 
 <canvas id="scoreChart"></canvas>
 
-<h2>SEO Feature Dashboard</h2>
+<h2>SEO Checks (42 Features)</h2>
 
 <div id="featureGrid" class="feature-grid"></div>
 
-<h2>Top Keywords</h2>
-
-<ul id="keywords"></ul>
-
-<h2>Suggestions</h2>
+<h2>SEO Suggestions</h2>
 
 <ul id="suggestions"></ul>
 
-<button id="downloadPDF">Download PDF Report</button>
-
-<h2>Comparison Dashboard</h2>
+<h2>Website Comparison</h2>
 
 <table border="1">
 
 <thead>
-
 <tr>
-<th>Site</th>
+<th>Website</th>
 <th>Score</th>
-<th>H1</th>
-<th>Images</th>
 <th>Words</th>
-<th>Grade</th>
+<th>Images</th>
+<th>Links</th>
+<th>H1</th>
 </tr>
-
 </thead>
 
 <tbody id="comparisonTable"></tbody>
 
 </table>
-
-</div>
 
 <script src="script.js"></script>
 

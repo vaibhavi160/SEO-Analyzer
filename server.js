@@ -1,213 +1,226 @@
-const express=require("express");
-const axios=require("axios");
-const cheerio=require("cheerio");
-const cors=require("cors");
+const express=require("express")
+const axios=require("axios")
+const cheerio=require("cheerio")
+const cors=require("cors")
 
-const app=express();
+const app=express()
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static("public"));
+app.use(cors())
+app.use(express.json())
+app.use(express.static("public"))
 
 app.post("/analyze",async(req,res)=>{
 
-let {url}=req.body;
+let {url}=req.body
 
 try{
 
 if(!url.startsWith("http")){
-url="https://"+url;
+url="https://"+url
 }
 
 const {data}=await axios.get(url,{
 headers:{ "User-Agent":"Mozilla/5.0"},
 timeout:10000
-});
+})
 
-const $=cheerio.load(data);
+const $=cheerio.load(data)
 
-/* BASIC SEO */
+/* METADATA */
 
-const title=$("title").text().trim();
+const title=$("title").text().trim()
+const titleLength=title.length
 
-const metaDescription=$('meta[name="description"]').attr("content")||"";
+const metaDescription=$('meta[name="description"]').attr("content")||""
+const metaDescriptionLength=metaDescription.length
 
-const canonical=$('link[rel="canonical"]').attr("href")||"";
+const metaRobots=$('meta[name="robots"]').attr("content")||""
 
-const h1Count=$("h1").length;
-const h2Count=$("h2").length;
+const canonical=$('link[rel="canonical"]').attr("href")||""
+
+const favicon=$('link[rel="icon"]').attr("href")||""
+
+/* HEADINGS */
+
+const h1Count=$("h1").length
+const h2Count=$("h2").length
+const h3Count=$("h3").length
+
+/* CONTENT */
+
+const bodyText=$("body").text()
+const words=bodyText.match(/\b\w+\b/g)||[]
+const wordCount=words.length
+
+const paragraphCount=$("p").length
+
+const htmlSize=Buffer.byteLength(data)
+
+const textHTMLRatio=(bodyText.length/htmlSize*100).toFixed(2)
+
+const strongTags=$("strong").length
+const lists=$("ul,ol").length
 
 /* LINKS */
 
-const links=$("a").length;
+const links=$("a")
 
-let internalLinks=0;
-let externalLinks=0;
+const totalLinks=links.length
 
-$("a").each((i,el)=>{
+let internalLinks=0
+let externalLinks=0
+let nofollowLinks=0
 
-const href=$(el).attr("href")||"";
+links.each((i,el)=>{
 
-if(href.startsWith("http")) externalLinks++;
-else internalLinks++;
+const href=$(el).attr("href")||""
+const rel=$(el).attr("rel")||""
 
-});
+if(rel.includes("nofollow")) nofollowLinks++
+
+if(href.startsWith("http")) externalLinks++
+else internalLinks++
+
+})
 
 /* IMAGES */
 
-const images=$("img");
+const images=$("img")
+const totalImages=images.length
 
-let imagesWithoutAlt=0;
+let imagesWithoutAlt=0
+let largeImages=0
 
 images.each((i,el)=>{
-if(!$(el).attr("alt")) imagesWithoutAlt++;
-});
 
-/* TEXT ANALYSIS */
+if(!$(el).attr("alt")) imagesWithoutAlt++
 
-const text=$("body").text().toLowerCase();
+const width=$(el).attr("width")
+if(width && parseInt(width)>1000) largeImages++
 
-const words=text.match(/\b\w+\b/g)||[];
+})
 
-const wordTotal=words.length;
+const altCoverage=((totalImages-imagesWithoutAlt)/totalImages*100||0).toFixed(1)
 
-let wordCount={};
+/* TECHNICAL */
 
-words.forEach(w=>{
-if(w.length>3){
-wordCount[w]=(wordCount[w]||0)+1;
-}
-});
+const isHTTPS=url.startsWith("https")
 
-const keywords=Object.entries(wordCount)
-.sort((a,b)=>b[1]-a[1])
-.slice(0,10);
+const viewport=$('meta[name="viewport"]').length>0
 
-/* PAGE SIZE */
+const htmlLang=$("html").attr("lang")||""
 
-const htmlSizeKB=(Buffer.byteLength(data)/1024).toFixed(2);
+const amp=$('link[rel="amphtml"]').length>0
 
-/* EXTRA FEATURES */
+let robotsTxt=false
+try{
+await axios.get(url+"/robots.txt")
+robotsTxt=true
+}catch{}
 
-const paragraphCount=$("p").length;
+let sitemap=false
+try{
+await axios.get(url+"/sitemap.xml")
+sitemap=true
+}catch{}
 
-const listCount=$("ul,ol").length;
+/* PERFORMANCE */
 
-const strongTags=$("strong").length;
+const htmlSizeKB=(htmlSize/1024).toFixed(2)
 
-const scriptCount=$("script").length;
+const scriptCount=$("script").length
 
-const cssFiles=$('link[rel="stylesheet"]').length;
+const cssFiles=$('link[rel="stylesheet"]').length
 
-const forms=$("form").length;
+const inlineStyles=$("[style]").length
 
-const tables=$("table").length;
+/* ENGAGEMENT */
 
-const videos=$("video,iframe").length;
+const forms=$("form").length
 
-const hasViewport=$('meta[name="viewport"]').length>0;
+const tables=$("table").length
 
-const isHTTPS=url.startsWith("https");
+const videos=$("video,iframe").length
 
-const htmlLang=$("html").attr("lang")||"";
+const socialMeta=$('meta[property^="og"]').length
 
-/* SEO SUGGESTIONS */
+/* STRUCTURE */
 
-let suggestions=[];
+const structuredData=$('script[type="application/ld+json"]').length
 
-if(!title) suggestions.push("Missing title tag");
+const openGraph=$('meta[property^="og"]').length
 
-if(title.length<30) suggestions.push("Title too short");
+const twitterCards=$('meta[name^="twitter"]').length
 
-if(title.length>60) suggestions.push("Title too long");
+/* ACCESSIBILITY */
 
-if(!metaDescription) suggestions.push("Meta description missing");
+const headingStructure=(h1Count===1 && h2Count>0)
 
-if(metaDescription.length<120) suggestions.push("Meta description too short");
+const readabilityHint=wordCount>300
 
-if(imagesWithoutAlt>0) suggestions.push(imagesWithoutAlt+" images missing alt text");
+/* SUGGESTIONS */
 
-if(h1Count===0) suggestions.push("No H1 tag found");
+let suggestions=[]
 
-if(h1Count>1) suggestions.push("Multiple H1 tags found");
-
-if(!canonical) suggestions.push("Canonical tag missing");
-
-if(!hasViewport) suggestions.push("Viewport tag missing");
-
-if(wordTotal<300) suggestions.push("Low content length");
-
-if(internalLinks<3) suggestions.push("Add more internal links");
-
-if(externalLinks===0) suggestions.push("Add outbound links");
-
-if(!htmlLang) suggestions.push("HTML lang attribute missing");
+if(!title) suggestions.push("Missing title tag")
+if(titleLength<30) suggestions.push("Title too short")
+if(metaDescriptionLength<120) suggestions.push("Meta description short")
+if(imagesWithoutAlt>0) suggestions.push("Add alt text to images")
+if(h1Count===0) suggestions.push("Add H1 heading")
+if(internalLinks<3) suggestions.push("Add internal links")
+if(!robotsTxt) suggestions.push("robots.txt missing")
+if(!sitemap) suggestions.push("sitemap.xml missing")
+if(!viewport) suggestions.push("Viewport tag missing")
+if(!isHTTPS) suggestions.push("Site should use HTTPS")
+if(wordCount<300) suggestions.push("Content too short")
 
 /* SCORE */
 
-let score=100-suggestions.length*5;
-
-if(score<0) score=0;
-
-let grade="Poor";
-
-if(score>85) grade="Excellent";
-else if(score>70) grade="Good";
-else if(score>50) grade="Average";
+let score=100-suggestions.length*5
+if(score<0) score=0
 
 res.json({
 
 url,
-title,
-metaDescription,
+
+title,titleLength,
+metaDescription,metaDescriptionLength,
+metaRobots,canonical,favicon,
+
+h1Count,h2Count,h3Count,
+
+wordCount,paragraphCount,textHTMLRatio,strongTags,lists,
+
+totalLinks,internalLinks,externalLinks,nofollowLinks,
+
+totalImages,imagesWithoutAlt,largeImages,altCoverage,
+
+isHTTPS,viewport,htmlLang,amp,robotsTxt,sitemap,
+
+htmlSizeKB,scriptCount,cssFiles,inlineStyles,
+
+forms,tables,videos,socialMeta,
+
+structuredData,openGraph,twitterCards,
+
+headingStructure,readabilityHint,
 
 score,
-grade,
-
-h1Count,
-h2Count,
-
-links,
-internalLinks,
-externalLinks,
-
-totalImages:images.length,
-imagesWithoutAlt,
-
-htmlSizeKB,
-
-keywords,
-
-wordTotal,
-paragraphCount,
-listCount,
-strongTags,
-scriptCount,
-cssFiles,
-forms,
-tables,
-videos,
-
-hasViewport,
-isHTTPS,
-htmlLang,
 
 suggestions
 
-});
+})
 
 }catch(error){
 
-res.status(500).json({error:"Website not accessible"});
+res.status(500).json({error:"Site not accessible"})
 
 }
 
-});
+})
 
-const PORT=process.env.PORT||3000;
+const PORT=process.env.PORT||3000
 
 app.listen(PORT,()=>{
-
-console.log("Server running on "+PORT);
-
-});
+console.log("Server running "+PORT)
+})
